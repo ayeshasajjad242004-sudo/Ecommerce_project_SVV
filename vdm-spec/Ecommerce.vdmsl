@@ -1,1 +1,96 @@
+module ECommerce
 
+exports all
+
+definitions
+
+types
+
+OrderStatus = <Cart> | <Placed> | <Paid> | <Shipped> | <Delivered> | <Cancelled>;
+
+Product ::
+  pid : nat
+  name : seq of char
+  price : nat
+  stock : nat
+inv mk_Product(-,-,-,stock) == stock >= 0;
+
+CartItem ::
+  productId : nat
+  quantity : nat;
+
+Order ::
+  orderId : nat
+  userId : nat
+  items : seq of CartItem
+  total : nat
+  status : OrderStatus;
+
+state System of
+  products : map nat to Product
+  orders : map nat to Order
+  carts : map nat to seq of CartItem
+init s ==
+  s = mk_System({|->}, {|->}, {|->})
+end
+
+functions
+
+TotalPrice : seq of CartItem * map nat to Product -> nat
+TotalPrice(items, prods) ==
+  if items = []
+  then 0
+  else
+    let item = hd items,
+        rest = tl items
+    in
+      item.quantity * prods(item.productId).price
+      + TotalPrice(rest, prods)
+measure len(items);
+
+operations
+
+PlaceOrder : nat * nat ==> ()
+PlaceOrder(uid, oid) ==
+(
+  dcl cart : seq of CartItem := carts(uid);
+
+  dcl total : nat := TotalPrice(cart, products);
+
+  orders := orders munion
+  { oid |-> mk_Order(oid, uid, cart, total, <Placed>) }
+)
+pre uid in set dom carts and carts(uid) <> []
+post orders(oid).status = <Placed>;
+
+MakePayment : nat ==> ()
+MakePayment(oid) ==
+(
+  dcl o : Order := orders(oid);
+
+  orders := orders ++ { oid |-> mu(o, status |-> <Paid>) }
+)
+pre oid in set dom orders and orders(oid).status = <Placed>
+post orders(oid).status = <Paid>;
+
+ShipOrder : nat ==> ()
+ShipOrder(oid) ==
+(
+  dcl o : Order := orders(oid);
+
+  orders := orders ++ { oid |-> mu(o, status |-> <Shipped>) }
+)
+pre oid in set dom orders and orders(oid).status = <Paid>
+post orders(oid).status = <Shipped>;
+
+CancelOrder : nat ==> ()
+CancelOrder(oid) ==
+(
+  dcl o : Order := orders(oid);
+
+  orders := orders ++ { oid |-> mu(o, status |-> <Cancelled>) }
+)
+pre oid in set dom orders and orders(oid).status <> <Shipped>
+post orders(oid).status = <Cancelled>;
+
+end ECommerce
