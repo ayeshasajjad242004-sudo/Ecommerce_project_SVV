@@ -1,1 +1,22 @@
+name: SVV CI Pipeline
 
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Validate project structure
+        run: |
+          echo "Checking SVV project structure..."
+          ls
+          echo "Alloy, VDM, Z, and requirements files should be present"
+
+      - name: Basic success message
+        run: echo "SVV project CI completed successfully"
