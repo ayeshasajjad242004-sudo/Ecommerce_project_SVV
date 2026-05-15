@@ -1,1 +1,48 @@
+[USER, PRODUCT]
 
+STATUS ::= Selection | Placed | Paid | Shipped | Delivered | Cancelled
+
+%% The system state matching your Alloy model and SRS
+| stock: PRODUCT → ℕ
+| price: PRODUCT → ℕ
+| cart: USER ⇸ ℙ PRODUCT
+| orders: USER ⇸ ℙ (PRODUCT × STATUS)
+
+%% Invariants (Rules that must never be broken)
+∀ p: PRODUCT ⦁ stock(p) ≥ 0
+∀ u: USER, p: PRODUCT, s: STATUS | (p, s) ∈ orders(u) ⦁
+    s = Shipped ⇒ (p, Paid) ∈ orders(u)
+∀ u: USER, p: PRODUCT, s: STATUS | (p, s) ∈ orders(u) ⦁
+    s = Cancelled ⇒ s ≠ Delivered
+
+%% Initial State: Starting point of the system
+InitOMSState
+| stock' = ∅
+| cart' = ∅
+| orders' = ∅
+
+%% Operation: Place Order (Changes status to Placed)
+PlaceOrder
+  ΔOMSState
+  u?: USER
+| u? ∈ dom cart ∧ cart(u?) ≠ ∅
+| ∀ p ∈ cart(u?) ⦁ stock(p) > 0
+| orders' = orders ⊕ {u? ↦ (cart(u?) × {Placed})}
+| cart' = cart ∖ {u?}
+| stock' = stock
+
+%% Operation: Make Payment (Changes status from Placed to Paid)
+MakePayment
+  ΔOMSState
+  u?: USER
+  p?: PRODUCT
+| (p?, Placed) ∈ orders(u?)
+| orders' = orders ⊕ {u? ↦ (orders(u?) ∖ {(p?, Placed)} ∪ {(p?, Paid)})}
+
+%% Operation: Cancel Order (Only if not shipped)
+CancelOrder
+  ΔOMSState
+  u?: USER
+  p?: PRODUCT
+| ∃ s: STATUS | (p?, s) ∈ orders(u?) ⦁ s ≠ Shipped
+| orders' = orders ⊕ {u? ↦ (orders(u?) ∖ {(p?, s)} ∪ {(p?, Cancelled)})}
