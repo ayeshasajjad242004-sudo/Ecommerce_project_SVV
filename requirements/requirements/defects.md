@@ -1,21 +1,49 @@
-REQUIREMENT DEFECT ANALYSIS
-E-Commerce Order Management System
 1. INTRODUCTION
 
-This document identifies defects found in the initial system requirements and provides their classification and corrected versions. These corrections ensure the system is suitable for formal modeling in Z-Notation, VDM, and Alloy.
+This document identifies and classifies defects found in the initial system requirements. Each defect is explained along with its correction to ensure the system is clear, consistent, and suitable for formal verification using Z-Notation, VDM, and Alloy.
 
 2. REQUIREMENT DEFECTS
-ID	Requirement	Defect Type	Explanation	Fix
-D1	"The system should be easy to use."	Ambiguity	“Easy” is not measurable or verifiable	Redefined as: A user must complete checkout within 5 minutes
-D2	"Users can cancel orders at any time."	Inconsistency	Conflicts with shipping state rules	Cancellation allowed only before Shipped state
-D3	"System supports unlimited orders."	Overscope	Not realistic for a formal lab system	Limited to 100 concurrent orders
-D4	"Payment happens normally."	Non-verifiable	No clear definition of payment process	Replaced with payment simulation step
-D5	"Stock updates automatically."	Ambiguity	No rule defining when/how stock updates	Defined: stock decreases after PlaceOrder confirmation
+D1: Ambiguity in Usability Requirement
+
+The requirement states that “the system should be easy to use.” This is ambiguous because the term “easy” is subjective and cannot be measured or verified in formal models.
+
+Fix:
+The requirement has been refined to:
+A new user must be able to complete the checkout process within 5 minutes.
+
+D2: Inconsistency in Order Cancellation Rule
+
+The requirement states that users can cancel orders at any time. This conflicts with the system state model where shipped orders are final and cannot be modified.
+
+Fix:
+Cancellation is only allowed if the order status is not “Shipped”.
+
+D3: Overscope in System Capacity Requirement
+
+The requirement mentions support for unlimited or very large numbers of orders. This is unrealistic for a lab-based formal verification project.
+
+Fix:
+The system is limited to supporting up to 100 concurrent active orders.
+
+D4: Non-verifiable Payment Requirement
+
+The requirement states that payment happens normally, but it does not define how payment is processed or validated.
+
+Fix:
+Payment is redefined as a simulation step where the system changes order status from “Placed” to “Paid”.
+
+D5: Ambiguity in Stock Update Behavior
+
+The requirement states that stock updates automatically, but does not specify when or under what conditions this happens.
+
+Fix:
+Stock is reduced only after a successful “PlaceOrder” operation and restored if an order is cancelled before shipping.
+
 3. SUMMARY
 
-The above defects were resolved in the final SRS document to ensure:
+After correcting the above defects, the requirements are now:
 
-Clear and measurable requirements
-Consistent system behavior
-Verifiable constraints for formal methods
-Proper alignment with Z, VDM, and Alloy modeling
+Clear and measurable
+Consistent with system states
+Suitable for formal verification
+Ready for modeling in Z, VDM, and Alloy
